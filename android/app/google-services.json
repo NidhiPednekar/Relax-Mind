@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "196055777836",
+    "project_id": "relaxmind43",
+    "storage_bucket": "relaxmind43.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:196055777836:android:26c25699b603f6f4298789",
+        "android_client_info": {
+          "package_name": "com.example.relax_mind"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzVioxHZTBR8qtKov7ZNY1bmPf91XFY9U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
