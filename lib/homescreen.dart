@@ -3,6 +3,7 @@ import 'support.dart';
 import 'profile.dart';
 import 'age_activities.dart';
 import 'meditations.dart';
+import 'happy_moments_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -195,6 +196,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
+              const SizedBox(height: 16),
+              _buildFeatureCard(
+                context,
+                'Happy Moments',
+                'Capture your joyful memories',
+                Icons.favorite,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HappyMomentsScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+
               const SizedBox(height: 30),
             ],
           ),
@@ -368,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return Container(
-          height: 400, // Increased height to accommodate the new option
+          height: 400, 
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.only(
@@ -543,3 +561,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+

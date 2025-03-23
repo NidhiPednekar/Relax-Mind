@@ -26,7 +26,7 @@ class Meditations extends StatefulWidget {
   State<Meditations> createState() => _MeditationsState();
 }
 
-class _MeditationsState extends State<Meditations> {
+class _MeditationsState extends State<Meditations> with WidgetsBindingObserver {
   // Selected category
   String _selectedCategory = 'All';
   final List<String> _categories = [
@@ -35,7 +35,9 @@ class _MeditationsState extends State<Meditations> {
     'Anxiety',
     'Focus',
     'Stress',
-    'Beginners'
+    'Beginners',
+    'Motivation',
+    'Mindfulness'
   ];
 
   // List of meditation videos
@@ -120,33 +122,142 @@ class _MeditationsState extends State<Meditations> {
       videoId: "cEqZthCaMpo",
       thumbnailUrl: "https://img.youtube.com/vi/cEqZthCaMpo/0.jpg",
     ),
+    // Added new videos
+    MeditationVideo(
+      title: "Ocean Waves: Deep Sleep Meditation",
+      description: "Drift to sleep with calming ocean sounds and guidance",
+      duration: "45 min",
+      category: "Sleep",
+      videoId: "DWcJFNfaw9c",
+      thumbnailUrl: "https://img.youtube.com/vi/DWcJFNfaw9c/0.jpg",
+    ),
+    MeditationVideo(
+      title: "Morning Energy Boost",
+      description: "Energize your day with this revitalizing meditation",
+      duration: "12 min",
+      category: "Motivation",
+      videoId: "ENYYb5vIMkc",
+      thumbnailUrl: "https://img.youtube.com/vi/ENYYb5vIMkc/0.jpg",
+    ),
+    MeditationVideo(
+      title: "Gratitude Practice",
+      description: "Cultivate thankfulness and positive energy",
+      duration: "15 min",
+      category: "Mindfulness",
+      videoId: "xfD4HaBBc0I",
+      thumbnailUrl: "https://img.youtube.com/vi/xfD4HaBBc0I/0.jpg",
+    ),
+    MeditationVideo(
+      title: "Exam Anxiety Relief",
+      description: "Calm your mind before important tests or presentations",
+      duration: "20 min",
+      category: "Anxiety",
+      videoId: "aJCv7K7cfpM",
+      thumbnailUrl: "https://img.youtube.com/vi/aJCv7K7cfpM/0.jpg",
+    ),
+    MeditationVideo(
+      title: "Mindful Eating Practice",
+      description: "Transform your relationship with food through mindfulness",
+      duration: "18 min",
+      category: "Mindfulness",
+      videoId: "oJo7MTJdgIo",
+      thumbnailUrl: "https://img.youtube.com/vi/oJo7MTJdgIo/0.jpg",
+    ),
+    MeditationVideo(
+      title: "Creative Visualization",
+      description: "Unlock your creative potential through guided imagery",
+      duration: "25 min",
+      category: "Motivation",
+      videoId: "Ks-_Mh1QhMc",
+      thumbnailUrl: "https://img.youtube.com/vi/Ks-_Mh1QhMc/0.jpg",
+    ),
+    MeditationVideo(
+      title: "Workplace Focus Enhancement",
+      description: "Improve concentration and productivity at work",
+      duration: "15 min",
+      category: "Focus",
+      videoId: "ZToicYcHIOU",
+      thumbnailUrl: "https://img.youtube.com/vi/ZToicYcHIOU/0.jpg",
+    ),
+    MeditationVideo(
+      title: "Evening Wind Down",
+      description: "Prepare your mind and body for restful sleep",
+      duration: "22 min",
+      category: "Sleep",
+      videoId: "acUZdGd_3Gk",
+      thumbnailUrl: "https://img.youtube.com/vi/acUZdGd_3Gk/0.jpg",
+    ),
+    MeditationVideo(
+      title: "5-Minute Emergency Calm",
+      description: "Quick relief for moments of high stress or anxiety",
+      duration: "5 min",
+      category: "Stress",
+      videoId: "sTUNySzof3s",
+      thumbnailUrl: "https://img.youtube.com/vi/sTUNySzof3s/0.jpg",
+    ),
+    MeditationVideo(
+      title: "Body Scan for Beginners",
+      description: "Learn to release tension through mindful body awareness",
+      duration: "15 min",
+      category: "Beginners",
+      videoId: "QS2yDmWk0vs",
+      thumbnailUrl: "https://img.youtube.com/vi/QS2yDmWk0vs/0.jpg",
+    ),
   ];
 
   YoutubePlayerController? _controller;
   MeditationVideo? _currentVideo;
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   @override
   void dispose() {
     _controller?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused && _controller != null) {
+      _controller!.pause();
+    }
   }
 
   void _playVideo(MeditationVideo video) {
+    // Clean up any existing controller
+    if (_controller != null) {
+      _controller!.dispose();
+    }
+    
+    // Create a new controller for this video
+    final controller = YoutubePlayerController(
+      initialVideoId: video.videoId,
+      flags: const YoutubePlayerFlags(
+        autoPlay: true,
+        mute: false,
+        enableCaption: true,
+        showLiveFullscreenButton: false,
+      ),
+    );
+    
     setState(() {
       _currentVideo = video;
-      _controller = YoutubePlayerController(
-        initialVideoId: video.videoId,
-        flags: const YoutubePlayerFlags(
-          autoPlay: true,
-          mute: false,
-        ),
-      );
+      _controller = controller;
     });
   }
 
   void _closeVideo() {
+    if (_controller != null) {
+      _controller!.pause();
+      _controller!.dispose();
+    }
+    
     setState(() {
-      _controller?.pause();
       _currentVideo = null;
       _controller = null;
     });
@@ -164,195 +275,208 @@ class _MeditationsState extends State<Meditations> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 4,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.blue),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        title: const Text(
-          'Guided Meditations',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
+    return WillPopScope(
+      onWillPop: () async {
+        if (_currentVideo != null) {
+          _closeVideo();
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          elevation: 4,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.blue),
+            onPressed: () {
+              if (_currentVideo != null) {
+                _closeVideo();
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+          title: const Text(
+            'Guided Meditations',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
           ),
+          centerTitle: true,
         ),
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                // Categories
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SizedBox(
-                    height: 50,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _categories.length,
-                      itemBuilder: (context, index) {
-                        final category = _categories[index];
-                        final isSelected = category == _selectedCategory;
-                        
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 10.0),
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedCategory = category;
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                              decoration: BoxDecoration(
-                                color: isSelected ? Colors.black : Colors.white,
-                                borderRadius: BorderRadius.circular(25.0),
-                                border: Border.all(
-                                  color: isSelected ? Colors.blue : Colors.grey.shade300,
-                                  width: 2.0,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade300, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  // Categories
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SizedBox(
+                      height: 50,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _categories.length,
+                        itemBuilder: (context, index) {
+                          final category = _categories[index];
+                          final isSelected = category == _selectedCategory;
+                          
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 10.0),
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedCategory = category;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? Colors.black : Colors.white,
+                                  borderRadius: BorderRadius.circular(25.0),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.blue : Colors.grey.shade300,
+                                    width: 2.0,
+                                  ),
                                 ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  category,
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.black,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                child: Center(
+                                  child: Text(
+                                    category,
+                                    style: TextStyle(
+                                      color: isSelected ? Colors.white : Colors.black,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                
-                // Featured meditation banner
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Container(
-                    height: 150,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16.0),
-                      image: const DecorationImage(
-                        image: NetworkImage('https://img.youtube.com/vi/O8G9ltYzdHM/0.jpg'),
-                        fit: BoxFit.cover,
+                          );
+                        },
                       ),
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          _playVideo(_meditationVideos[7]); // Play the "Clarity Fountain" video
-                        },
+                  ),
+                  
+                  // Featured meditation banner
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      height: 150,
+                      decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16.0),
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                Colors.black.withOpacity(0.8),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                          alignment: Alignment.bottomLeft,
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text(
-                                    'Featured Today',
-                                    style: TextStyle(
-                                      color: Colors.blue,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Clarity Fountain: Anxiety Dissolve',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                        image: const DecorationImage(
+                          image: NetworkImage('https://img.youtube.com/vi/O8G9ltYzdHM/0.jpg'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            _playVideo(_meditationVideos[7]); // Play the "Clarity Fountain" video
+                          },
+                          borderRadius: BorderRadius.circular(16.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16.0),
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  Colors.black.withOpacity(0.8),
+                                  Colors.transparent,
                                 ],
                               ),
-                              const Icon(
-                                Icons.play_circle_fill,
-                                color: Colors.white,
-                                size: 40,
-                              ),
-                            ],
+                            ),
+                            alignment: Alignment.bottomLeft,
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'Featured Today',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Clarity Fountain: Anxiety Dissolve',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const Icon(
+                                  Icons.play_circle_fill,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Video grid
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: _filteredVideos.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No meditations found in this category',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black54,
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Video grid
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: _filteredVideos.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No meditations found in this category',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black54,
+                                ),
                               ),
+                            )
+                          : GridView.builder(
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16.0,
+                                mainAxisSpacing: 16.0,
+                                childAspectRatio: 0.75,
+                              ),
+                              itemCount: _filteredVideos.length,
+                              itemBuilder: (context, index) {
+                                final video = _filteredVideos[index];
+                                return _buildVideoCard(video);
+                              },
                             ),
-                          )
-                        : GridView.builder(
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16.0,
-                              mainAxisSpacing: 16.0,
-                              childAspectRatio: 0.75,
-                            ),
-                            itemCount: _filteredVideos.length,
-                            itemBuilder: (context, index) {
-                              final video = _filteredVideos[index];
-                              return _buildVideoCard(video);
-                            },
-                          ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            
-            // Video player overlay
-            if (_currentVideo != null && _controller != null)
-              _buildVideoPlayerOverlay(),
-          ],
+                ],
+              ),
+              
+              // Video player overlay
+              if (_currentVideo != null && _controller != null)
+                _buildVideoPlayerOverlay(),
+            ],
+          ),
         ),
       ),
     );
@@ -382,6 +506,16 @@ class _MeditationsState extends State<Meditations> {
                     height: 100,
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 100,
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(Icons.image_not_supported, color: Colors.grey),
+                        ),
+                      );
+                    },
                   ),
                   Positioned(
                     right: 8,
@@ -472,26 +606,33 @@ class _MeditationsState extends State<Meditations> {
   }
 
   Widget _buildVideoPlayerOverlay() {
-    return Container(
-      color: Colors.black.withOpacity(0.9),
-      child: Column(
-        children: [
-          AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: _closeVideo,
+    // Using direct implementation without extra wrappers for more reliable playback
+    return SafeArea(
+      child: Container(
+        color: Colors.black,
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: _closeVideo,
+              ),
+              title: Text(
+                _currentVideo?.title ?? "",
+                style: const TextStyle(color: Colors.white),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            title: Text(
-              _currentVideo?.title ?? "",
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: _controller != null
-                  ? YoutubePlayer(
+            Expanded(
+              child: Column(
+                children: [
+                  // Direct YouTube player without nested builders
+                  AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: YoutubePlayer(
                       controller: _controller!,
                       showVideoProgressIndicator: true,
                       progressIndicatorColor: Colors.blue,
@@ -499,62 +640,150 @@ class _MeditationsState extends State<Meditations> {
                         playedColor: Colors.blue,
                         handleColor: Colors.blue,
                       ),
-                    )
-                  : const CircularProgressIndicator(),
-            ),
-          ),
-          if (_currentVideo != null)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _currentVideo!.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      onReady: () {
+                        // Player is ready to play
+                        print("YouTube Player Ready");
+                      },
+                      onEnded: (metaData) {
+                        // Video ended - you could navigate back or show related videos
+                      },
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _currentVideo!.description,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          _currentVideo!.category,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                  
+                  // Video details
+                  if (_currentVideo != null)
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _currentVideo!.title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                _currentVideo!.description,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      _currentVideo!.category,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    _currentVideo!.duration,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              
+                              // Playback controls (optional)
+                              const SizedBox(height: 24),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.skip_previous, color: Colors.white, size: 36),
+                                    onPressed: () {
+                                      // Find previous video in the category and play it
+                                      final videos = _filteredVideos;
+                                      final currentIndex = videos.indexWhere((v) => v.videoId == _currentVideo!.videoId);
+                                      if (currentIndex > 0) {
+                                        _playVideo(videos[currentIndex - 1]);
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(width: 16),
+                                  IconButton(
+                                    icon: const Icon(Icons.replay_10, color: Colors.white, size: 36),
+                                    onPressed: () {
+                                      // Rewind 10 seconds
+                                      if (_controller != null) {
+                                        final currentPosition = _controller!.value.position.inSeconds;
+                                        _controller!.seekTo(Duration(seconds: currentPosition - 10));
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(width: 16),
+                                  IconButton(
+                                    icon: Icon(
+                                      _controller?.value.isPlaying ?? false 
+                                          ? Icons.pause_circle_filled 
+                                          : Icons.play_circle_filled,
+                                      color: Colors.white,
+                                      size: 48,
+                                    ),
+                                    onPressed: () {
+                                      if (_controller != null) {
+                                        if (_controller!.value.isPlaying) {
+                                          _controller!.pause();
+                                        } else {
+                                          _controller!.play();
+                                        }
+                                        setState(() {});
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(width: 16),
+                                  IconButton(
+                                    icon: const Icon(Icons.forward_10, color: Colors.white, size: 36),
+                                    onPressed: () {
+                                      // Forward 10 seconds
+                                      if (_controller != null) {
+                                        final currentPosition = _controller!.value.position.inSeconds;
+                                        _controller!.seekTo(Duration(seconds: currentPosition + 10));
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(width: 16),
+                                  IconButton(
+                                    icon: const Icon(Icons.skip_next, color: Colors.white, size: 36),
+                                    onPressed: () {
+                                      // Find next video in the category and play it
+                                      final videos = _filteredVideos;
+                                      final currentIndex = videos.indexWhere((v) => v.videoId == _currentVideo!.videoId);
+                                      if (currentIndex < videos.length - 1) {
+                                        _playVideo(videos[currentIndex + 1]);
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _currentVideo!.duration,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
                 ],
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
