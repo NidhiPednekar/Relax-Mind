@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'support.dart';
 import 'profile.dart';
+import 'age_activities.dart';
+import 'meditations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -48,11 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _selectedIndex == 0 
-          ? _buildHomeContent(context) 
-          : _selectedIndex == 1 
-              ? _buildGamesSection(context) 
-              : const ProfileScreen(),
+      body: _getBody(),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.blue,
@@ -82,6 +80,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _getBody() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildHomeContent(context);
+      case 1:
+        return _buildGamesSection(context);
+      case 2:
+        return const ProfileScreen();
+      default:
+        return _buildHomeContent(context);
+    }
+  }
+
   Widget _buildHomeContent(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -97,7 +108,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            
               const Icon(
                 Icons.self_improvement,
                 size: 80,
@@ -132,10 +142,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Find your inner peace',
                 Icons.self_improvement,
                 () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Meditations coming soon!'),
-                      duration: Duration(seconds: 2),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Meditations(),
                     ),
                   );
                 },
@@ -151,6 +161,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SnackBar(
                       content: Text('Journal coming soon!'),
                       duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildFeatureCard(
+                context,
+                'Age-Specific Activities',
+                'Personalized wellbeing exercises',
+                Icons.psychology,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AgeSpecificActivities(),
                     ),
                   );
                 },
@@ -218,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 30),
-            
+           
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
@@ -343,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return Container(
-          height: 300,
+          height: 400, // Increased height to accommodate the new option
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.only(
@@ -391,11 +416,42 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.self_improvement, color: Colors.blue),
+                title: const Text('Meditations'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Meditations(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.psychology, color: Colors.blue),
+                title: const Text('Age Activities'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AgeSpecificActivities(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.support_agent, color: Colors.blue),
                 title: const Text('Support'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.pushNamed(context, '/support');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EmergencySupport(),
+                    ),
+                  );
                 },
               ),
               ListTile(
