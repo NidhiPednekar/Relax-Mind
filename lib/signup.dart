@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'homescreen.dart';
+
+import 'login.dart'; 
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -55,14 +56,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
       
       if (!mounted) return;
       
-      // Navigate to home screen on successful signup
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      // Show thank you message
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Thank You!'),
+            content: const Text('Your account has been created successfully. Please log in to continue.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
       );
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully!'))
+      // Navigate to login screen
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
+      
     } on FirebaseAuthException catch (e) {
       String message;
       if (e.code == 'weak-password') {

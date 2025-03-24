@@ -1,561 +1,661 @@
 import 'package:flutter/material.dart';
-import 'support.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:math';
+import 'journal_screen.dart';
 import 'profile.dart';
-import 'age_activities.dart';
-import 'meditations.dart';
+import 'mental_health_resource.dart';
 import 'happy_moments_screen.dart';
+import 'mood_check_screen.dart';
+import 'mindful_games.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String _userName = '';
+  String _greeting = '';
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _recentEntries = [];
+  
+  // For daily quote
+  String _quoteText = '';
+  String _quoteAuthor = '';
+  bool _isLoadingQuote = true;
+
+  // Hardcoded quotes as fallback
+  final List<Map<String, String>> _hardcodedQuotes = [
+    {
+      "text": "Happiness is not something ready-made. It comes from your own actions.",
+      "author": "Dalai Lama"
+    },
+    {
+      "text": "The only way to do great work is to love what you do.",
+      "author": "Steve Jobs"
+    },
+    {
+      "text": "The purpose of our lives is to be happy.",
+      "author": "Dalai Lama"
+    },
+    {
+      "text": "Life is what happens when you're busy making other plans.",
+      "author": "John Lennon"
+    },
+    {
+      "text": "Get busy living or get busy dying.",
+      "author": "Stephen King"
+    },
+    {
+      "text": "You only live once, but if you do it right, once is enough.",
+      "author": "Mae West"
+    },
+    {
+      "text": "Many of life's failures are people who did not realize how close they were to success when they gave up.",
+      "author": "Thomas A. Edison"
+    },
+    {
+      "text": "If you want to live a happy life, tie it to a goal, not to people or things.",
+      "author": "Albert Einstein"
+    },
+    {
+      "text": "Your time is limited, don't waste it living someone else's life.",
+      "author": "Steve Jobs"
+    },
+    {
+      "text": "The best way to predict the future is to create it.",
+      "author": "Abraham Lincoln"
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+    _setGreeting();
+    _fetchDailyQuote();
+  }
+
+  void _setGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      _greeting = 'Good Morning';
+    } else if (hour < 17) {
+      _greeting = 'Good Afternoon';
+    } else {
+      _greeting = 'Good Evening';
+    }
+  }
+
+  Future<void> _fetchDailyQuote() async {
+    setState(() {
+      _isLoadingQuote = true;
+    });
+    
+    try {
+      // Try to fetch from API
+      final response = await http.get(
+        Uri.parse('https://api.quotable.io/random?tags=inspirational,happiness,wisdom'),
+      ).timeout(const Duration(seconds: 5));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _quoteText = data['content'];
+          _quoteAuthor = data['author'];
+          _isLoadingQuote = false;
+        });
+      } else {
+        // If API fails, use hardcoded quotes
+        _useRandomHardcodedQuote();
+      }
+    } catch (e) {
+      print('Error fetching quote: $e');
+      // If there's an error, use hardcoded quotes
+      _useRandomHardcodedQuote();
+    }
+  }
+  
+  void _useRandomHardcodedQuote() {
+    final random = Random();
+    final quote = _hardcodedQuotes[random.nextInt(_hardcodedQuotes.length)];
+    setState(() {
+      _quoteText = quote['text']!;
+      _quoteAuthor = quote['author']!;
+      _isLoadingQuote = false;
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    setState(() {
+      _isLoading = true;
+    });
+   
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        // Load user profile
+        final docSnapshot = await _firestore.collection('users').doc(user.uid).get();
+        if (docSnapshot.exists) {
+          setState(() {
+            _userName = docSnapshot.data()?['name'] ?? 'User';
+          });
+        }
+       
+        // Load recent journal entries
+        final querySnapshot = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('journal_entries')
+            .orderBy('createdAt', descending: true)
+            .limit(3)
+            .get();
+       
+        final entries = querySnapshot.docs.map((doc) {
+          final data = doc.data();
+          return {
+            'id': doc.id,
+            'title': data['title'] ?? 'Untitled',
+            'content': data['content'] ?? '',
+            'mood': data['mood'] ?? 'Neutral',
+            'createdAt': (data['createdAt'] as Timestamp).toDate(),
+          };
+        }).toList();
+       
+        setState(() {
+          _recentEntries = entries;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Color _getMoodColor(String mood) {
+    switch (mood.toLowerCase()) {
+      case 'happy':
+        return Colors.amber;
+      case 'sad':
+        return Colors.blue;
+      case 'anxious':
+        return Colors.purple;
+      case 'angry':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getMoodIcon(String mood) {
+    switch (mood.toLowerCase()) {
+      case 'happy':
+        return Icons.sentiment_very_satisfied;
+      case 'sad':
+        return Icons.sentiment_dissatisfied;
+      case 'anxious':
+        return Icons.sentiment_neutral;
+      case 'angry':
+        return Icons.sentiment_very_dissatisfied;
+      default:
+        return Icons.sentiment_neutral;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 4,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.blue),
-          onPressed: () {
-            _showDrawer(context);
-          },
-        ),
-        title: const Text(
-          'RelaxMind',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite, color: Colors.blue),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Favorites coming soon!'),
-                  duration: Duration(seconds: 2),
+        title: const Text('Home'),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade300, Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: _getBody(),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.games),
-            label: 'Games',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-      ),
+              ),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$_greeting,',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                _userName,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ProfileScreen(),
+                                ),
+                              );
+                            },
+                            child: CircleAvatar(
+                              radius: 25,
+                              backgroundColor: Colors.blue.shade700,
+                              child: const Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 30),
+                      
+                      // Daily Positive Quote
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.format_quote,
+                                  color: Colors.blue.shade700,
+                                  size: 30,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Daily Positive Quote',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.refresh,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                  onPressed: _fetchDailyQuote,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 15),
+                            _isLoadingQuote
+                                ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '"$_quoteText"',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          '- $_quoteAuthor',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 30),
+                     
+                      // How are you feeling today?
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MoodCheckScreen(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade100,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.mood,
+                                  size: 30,
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'How are you feeling today?',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      'Tap to check in with your mood',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.grey,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                     
+                      const SizedBox(height: 30),
+                      const Text(
+                        'Quick Actions',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                     
+                      // Quick Actions Grid
+                      GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildQuickActionCard(
+                            'Journal',
+                            Icons.book,
+                            Colors.green,
+                            () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const JournalScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildQuickActionCard(
+                            'Games',
+                            Icons.games,
+                            Colors.purple,
+                            () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const MindfulnessGamesScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildQuickActionCard(
+                            'Happy Moments',
+                            Icons.favorite,
+                            Colors.red,
+                            () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const HappyMomentsScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          _buildQuickActionCard(
+                            'Resources',
+                            Icons.health_and_safety,
+                            Colors.orange,
+                            () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                                                    builder: (context) => const MentalHealthResource(title: 'Mental Health Resources'),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                     
+                      const SizedBox(height: 30),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Recent Journal Entries',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const JournalScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text('View All'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                     
+                      // Recent Journal Entries
+                      _recentEntries.isEmpty
+                          ? Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'No journal entries yet. Start writing!',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Column(
+                              children: _recentEntries.map((entry) {
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 15),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(15),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 10,
+                                    ),
+                                    leading: Icon(
+                                      _getMoodIcon(entry['mood']),
+                                      color: _getMoodColor(entry['mood']),
+                                      size: 30,
+                                    ),
+                                    title: Text(
+                                      entry['title'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          entry['content'].length > 50
+                                              ? '${entry['content'].substring(0, 50)}...'
+                                              : entry['content'],
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          DateFormat('MMM d, yyyy').format(entry['createdAt']),
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    isThreeLine: true,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
     );
   }
 
-  Widget _getBody() {
-    switch (_selectedIndex) {
-      case 0:
-        return _buildHomeContent(context);
-      case 1:
-        return _buildGamesSection(context);
-      case 2:
-        return const ProfileScreen();
-      default:
-        return _buildHomeContent(context);
-    }
-  }
-
-  Widget _buildHomeContent(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade300, Colors.white],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(
-                Icons.self_improvement,
-                size: 80,
-                color: Colors.black,
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Welcome to RelaxMind 🌿',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Your personal space for mindfulness, reflection, and emotional well-being. Discover peace through meditation and journaling.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 30),
-
-              // Feature Cards
-              _buildFeatureCard(
-                context,
-                'Guided Meditations',
-                'Find your inner peace',
-                Icons.self_improvement,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const Meditations(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildFeatureCard(
-                context,
-                'Daily Journal',
-                'Track your journey',
-                Icons.book,
-                () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Journal coming soon!'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildFeatureCard(
-                context,
-                'Age-Specific Activities',
-                'Personalized wellbeing exercises',
-                Icons.psychology,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AgeSpecificActivities(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildFeatureCard(
-                context,
-                'Emergency Support',
-                '24/7 assistance',
-                Icons.support_agent,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EmergencySupport(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildFeatureCard(
-                context,
-                'Happy Moments',
-                'Capture your joyful memories',
-                Icons.favorite,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const HappyMomentsScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-
-              const SizedBox(height: 30),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGamesSection(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade300, Colors.white],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.games,
-              size: 80,
-              color: Colors.black,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Mindfulness Games',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Games designed to help improve focus, reduce stress, and promote relaxation.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 30),
-           
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  _buildGameCard(
-                    context,
-                    'Breathing Exercise',
-                    Icons.air,
-                    Colors.green,
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Breathing exercise coming soon!'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildGameCard(
-                    context,
-                    'Memory Match',
-                    Icons.flip,
-                    Colors.orange,
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Memory match game coming soon!'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildGameCard(
-                    context,
-                    'Focus Timer',
-                    Icons.timer,
-                    Colors.purple,
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Focus timer coming soon!'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildGameCard(
-                    context,
-                    'Calming Puzzle',
-                    Icons.extension,
-                    Colors.blue,
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Puzzle game coming soon!'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGameCard(
-    BuildContext context,
+  Widget _buildQuickActionCard(
     String title,
     IconData icon,
     Color color,
     VoidCallback onTap,
   ) {
-    return Material(
-      elevation: 4,
-      borderRadius: BorderRadius.circular(16),
-      color: Colors.black,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showDrawer(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          height: 400, 
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: const Offset(0, 3),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
               ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 10),
-                width: 50,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              child: Icon(
+                icon,
+                size: 30,
+                color: color,
               ),
-              ListTile(
-                leading: const Icon(Icons.home, color: Colors.blue),
-                title: const Text('Home'),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    _selectedIndex = 0;
-                  });
-                },
+            ),
+            const SizedBox(height: 15),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-              ListTile(
-                leading: const Icon(Icons.games, color: Colors.blue),
-                title: const Text('Games'),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    _selectedIndex = 1;
-                  });
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.self_improvement, color: Colors.blue),
-                title: const Text('Meditations'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const Meditations(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.psychology, color: Colors.blue),
-                title: const Text('Age Activities'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AgeSpecificActivities(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.support_agent, color: Colors.blue),
-                title: const Text('Support'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EmergencySupport(),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings, color: Colors.blue),
-                title: const Text('Settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Settings coming soon!'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.blue),
-                title: const Text('Logout'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushReplacementNamed(context, '/');
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFeatureCard(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-    VoidCallback onTap,
-  ) {
-    return Material(
-      elevation: 4,
-      borderRadius: BorderRadius.circular(16),
-      color: Colors.black,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: Colors.grey[300],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

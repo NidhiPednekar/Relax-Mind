@@ -54,7 +54,7 @@ class _MomentDetailScreenState extends State<MomentDetailScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Happy moment deleted')),
                   );
-                  Navigator.pop(context, true); // Return true to indicate deletion
+                  Navigator.pop(context, true); 
                 }
               } catch (e) {
                 setState(() {
