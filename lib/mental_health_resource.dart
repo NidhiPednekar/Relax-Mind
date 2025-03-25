@@ -15,24 +15,48 @@ class MentalHealthResource extends StatefulWidget {
 
 class _MentalHealthResourceState extends State<MentalHealthResource> {
   final List<MentalHealthTip> _tips = [
-    MentalHealthTip(
-      title: "Mindful Breathing",
-      description: "Practice the 4-7-8 breathing technique: Inhale for 4 seconds, hold for 7 seconds, exhale for 8 seconds. This helps reduce anxiety and promotes relaxation.",
-      imagePath: "assets/breathing_technique.png",
-      category: "Stress Management",
-    ),
+   
     MentalHealthTip(
       title: "Digital Detox",
       description: "Set boundaries with technology. Allocate specific times for social media and screen time. Create tech-free zones in your home to reduce mental clutter.",
-      imagePath: "assets/digital_detox.png",
+      imagePath: "images/digital_detox.jpg",
       category: "Well-being",
     ),
     MentalHealthTip(
       title: "Gratitude Journaling",
       description: "Write down three things you're grateful for each day. This practice shifts focus to positive aspects of life and improves overall mental outlook.",
-      imagePath: "assets/gratitude_journal.png",
+      imagePath: "images/gratitude_journal.jpg",
       category: "Positive Psychology",
     ),
+    MentalHealthTip(
+    title: "Mindful Breathing",
+    description: "Take a few deep breaths, focusing on each inhale and exhale. This simple practice helps reduce stress and increase mindfulness.",
+    imagePath: "images/mindful_breathing.jpg",
+    category: "Mindfulness",
+  ),
+
+    MentalHealthTip(
+    title: "Daily Exercise",
+    description: "Engage in at least 30 minutes of physical activity to boost mood, reduce stress, and improve overall well-being.",
+    imagePath: "images/daily_exercise.jpeg",
+    category: "Physical Well-being",
+  ),
+
+
+    MentalHealthTip(
+    title: "Sleep Hygiene",
+    description: "Maintain a consistent sleep schedule and create a calming bedtime routine to enhance sleep quality and overall mental health.",
+    imagePath: "images/sleep_hygiene.jpeg",
+    category: "Self-Care",
+  ),
+
+    MentalHealthTip(
+    title: "Connecting with Nature",
+    description: "Spend time outdoors, whether in a park or garden, to reduce stress and boost mental clarity.",
+    imagePath: "images/nature_walk.jpg",
+    category: "Well-being",
+  ),
+
   ];
 
   final List<VideoInfo> _videos = [
@@ -54,6 +78,27 @@ class _MentalHealthResourceState extends State<MentalHealthResource> {
       duration: "15 min",
       category: "Beginners",
     ),
+    VideoInfo(
+    title: "Guided Sleep Meditation",
+    videoId: "6p_yaNFSYao",
+    duration: "20 min",
+    category: "Relaxation",
+  ),
+
+    VideoInfo(
+    title: "Deep Breathing Exercises",
+    videoId: "nac4S2kXxA4",
+    duration: "10 min",
+    category: "Stress Relief",
+  ),
+
+    VideoInfo(
+    title: "Positive Affirmations for Mental Clarity",
+    videoId: "aEzl6E92sHY",
+    duration: "12 min",
+    category: "Self-Growth",
+  ),
+
   ];
 
   YoutubePlayerController? _currentController;
