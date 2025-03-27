@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'journal_entry.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
+
+import 'journal_entry.dart';
 
 class MomentDetailScreen extends StatefulWidget {
   final JournalEntry entry;
@@ -18,60 +19,61 @@ class _MomentDetailScreenState extends State<MomentDetailScreen> {
   bool _isDeleting = false;
 
   Future<void> _deleteEntry() async {
-    showDialog(
+    // Show confirmation dialog
+    final confirmDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Moment'),
         content: const Text('Are you sure you want to delete this happy moment? This action cannot be undone.'),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              setState(() {
-                _isDeleting = true;
-              });
-              
-              try {
-                final user = FirebaseAuth.instance.currentUser;
-                if (user == null) {
-                  throw Exception('User not logged in');
-                }
-                
-                await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(user.uid)
-                    .collection('journal_entries')
-                    .doc(widget.entry.id)
-                    .delete();
-                
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Happy moment deleted')),
-                  );
-                  Navigator.pop(context, true); 
-                }
-              } catch (e) {
-                setState(() {
-                  _isDeleting = false;
-                });
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error deleting entry: ${e.toString()}')),
-                  );
-                }
-              }
-            },
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
+
+    // Only proceed if user confirmed
+    if (confirmDelete != true) return;
+
+    setState(() {
+      _isDeleting = true;
+    });
+    
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
+      
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('journal_entries')
+          .doc(widget.entry.id)
+          .delete();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Happy moment deleted')),
+        );
+        Navigator.pop(context, true); 
+      }
+    } catch (e) {
+      setState(() {
+        _isDeleting = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting entry: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   @override

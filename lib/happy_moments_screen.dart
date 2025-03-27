@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:io' show File, Platform; 
-import 'dart:typed_data'; 
-import 'dart:ui' as ui; 
+import 'dart:io' show File, Platform;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'journal_entry.dart';
 import 'moment_detail.dart';
 import 'mindful_games.dart';
@@ -41,48 +42,94 @@ class _HappyMomentsScreenState extends State<HappyMomentsScreen> {
   void initState() {
     super.initState();
     _userCurrentMood = widget.currentMood;
-    _loadHappyMoments();
+    _setupHappyMomentsListener();
   }
 
-  Future<void> _loadHappyMoments() async {
+  void _setupHappyMomentsListener() {
     setState(() {
       _isLoading = true;
     });
+    
     try {
       final user = _auth.currentUser;
       if (user == null) {
         throw Exception('User not logged in');
       }
-      final querySnapshot = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('journal_entries')
-          .where('mood', isEqualTo: 'Happy')
-          .orderBy('createdAt', descending: true)
-          .get();
-      final entries = querySnapshot.docs
-          .map((doc) => JournalEntry.fromMap({...doc.data(), 'id': doc.id}))
-          .toList();
-      setState(() {
-        _happyMoments = entries;
-        _isLoading = false;
-      });
+
+      _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('journal_entries')
+        .where('mood', isEqualTo: 'Happy')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+          final entries = snapshot.docs
+              .map((doc) => JournalEntry.fromMap({...doc.data(), 'id': doc.id}))
+              .toList();
+          
+          setState(() {
+            _happyMoments = entries;
+            _isLoading = false;
+          });
+        }, onError: (error) {
+          setState(() {
+            _isLoading = false;
+          });
+          _showErrorSnackBar('Error loading happy moments: $error');
+        });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
+      _showErrorSnackBar('Error setting up moments listener: $e');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading happy moments: ${e.toString()}')),
+        SnackBar(content: Text(message)),
       );
     }
+  }
+
+  bool _validateEntry(String title, String content) {
+    const int maxTitleLength = 100;
+    const int maxContentLength = 1000;
+
+    title = title.trim();
+    content = content.trim();
+
+    if (title.isEmpty) {
+      _showErrorSnackBar('Title cannot be empty');
+      return false;
+    }
+
+    if (title.length > maxTitleLength) {
+      _showErrorSnackBar('Title must be less than $maxTitleLength characters');
+      return false;
+    }
+
+    if (content.isEmpty) {
+      _showErrorSnackBar('Content cannot be empty');
+      return false;
+    }
+
+    if (content.length > maxContentLength) {
+      _showErrorSnackBar('Content must be less than $maxContentLength characters');
+      return false;
+    }
+
+    return true;
   }
 
   Future<void> _addNewHappyMoment() async {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
-    XFile? image; 
+    XFile? image;
 
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -118,6 +165,7 @@ class _HappyMomentsScreenState extends State<HappyMomentsScreen> {
                         labelText: 'Title',
                         border: OutlineInputBorder(),
                       ),
+                      maxLength: 100,
                     ),
                     const SizedBox(height: 15),
                     TextField(
@@ -127,6 +175,7 @@ class _HappyMomentsScreenState extends State<HappyMomentsScreen> {
                         border: OutlineInputBorder(),
                       ),
                       maxLines: 5,
+                      maxLength: 1000,
                     ),
                     const SizedBox(height: 15),
                     Row(
@@ -216,19 +265,15 @@ class _HappyMomentsScreenState extends State<HappyMomentsScreen> {
                         ),
                       ),
                       onPressed: () async {
-                        if (titleController.text.isEmpty ||
-                            contentController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please fill in all fields')),
-                          );
+                        // Validate input
+                        if (!_validateEntry(
+                          titleController.text, 
+                          contentController.text
+                        )) {
                           return;
                         }
 
                         Navigator.pop(context);
-
-                        setState(() {
-                          _isLoading = true;
-                        });
 
                         try {
                           final user = _auth.currentUser;
@@ -259,9 +304,9 @@ class _HappyMomentsScreenState extends State<HappyMomentsScreen> {
 
                           final entry = JournalEntry(
                             id: _uuid.v4(),
-                            title: titleController.text,
-                            content: contentController.text,
-                            description: contentController.text,
+                            title: titleController.text.trim(),
+                            content: contentController.text.trim(),
+                            description: contentController.text.trim(),
                             mood: 'Happy',
                             imageUrl: imageUrl,
                             createdAt: DateTime.now(),
@@ -274,22 +319,13 @@ class _HappyMomentsScreenState extends State<HappyMomentsScreen> {
                               .doc(entry.id)
                               .set(entry.toMap());
 
-                          await _loadHappyMoments();
-
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Happy moment added!')),
                             );
                           }
                         } catch (e) {
-                          setState(() {
-                            _isLoading = false;
-                          });
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error adding happy moment: ${e.toString()}')),
-                            );
-                          }
+                          _showErrorSnackBar('Error adding happy moment: $e');
                         }
                       },
                       child: const Text('Save Happy Moment', style: TextStyle(fontSize: 18)),

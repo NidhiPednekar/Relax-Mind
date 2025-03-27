@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MentalHealthResource extends StatefulWidget {
   final String title;
@@ -15,48 +16,78 @@ class MentalHealthResource extends StatefulWidget {
 
 class _MentalHealthResourceState extends State<MentalHealthResource> {
   final List<MentalHealthTip> _tips = [
-   
     MentalHealthTip(
       title: "Digital Detox",
-      description: "Set boundaries with technology. Allocate specific times for social media and screen time. Create tech-free zones in your home to reduce mental clutter.",
+      description: "In our hyper-connected world, constant digital stimulation can lead to mental fatigue and stress. Practice a digital detox by setting clear boundaries with technology. Create specific time blocks for checking social media and emails, and establish tech-free zones in your home. Consider turning off notifications during work or personal time. Use this reclaimed time for mindful activities like reading, meditation, or face-to-face interactions. This practice helps reduce anxiety, improves focus, and allows your mind to reset and recharge.",
       imagePath: "images/digital_detox.jpg",
       category: "Well-being",
+      detailedTips: [
+        "Set daily screen time limits",
+        "Create a no-phone zone in your bedroom",
+        "Practice mindful technology use",
+        "Engage in offline activities daily"
+      ]
     ),
     MentalHealthTip(
       title: "Gratitude Journaling",
-      description: "Write down three things you're grateful for each day. This practice shifts focus to positive aspects of life and improves overall mental outlook.",
+      description: "Gratitude is a powerful mental health tool that shifts your focus from what's wrong to what's right in your life. By consistently documenting things you're thankful for, you rewire your brain to recognize positive experiences. This practice isn't about ignoring challenges, but about building resilience and emotional balance. Regularly reflecting on gratitude can reduce stress, improve sleep, and increase overall life satisfaction. It helps combat negative thought patterns and promotes a more optimistic outlook.",
       imagePath: "images/gratitude_journal.jpg",
       category: "Positive Psychology",
+      detailedTips: [
+        "Write 3 things you're grateful for daily",
+        "Be specific in your gratitude entries",
+        "Include small and big moments",
+        "Reflect on personal growth and lessons"
+      ]
     ),
     MentalHealthTip(
-    title: "Mindful Breathing",
-    description: "Take a few deep breaths, focusing on each inhale and exhale. This simple practice helps reduce stress and increase mindfulness.",
-    imagePath: "images/mindful_breathing.jpg",
-    category: "Mindfulness",
-  ),
-
+      title: "Mindful Breathing",
+      description: "Mindful breathing is a simple yet profound technique to manage stress and enhance emotional regulation. By consciously focusing on your breath, you activate the body's relaxation response, reducing cortisol levels and calming the nervous system. This practice helps interrupt racing thoughts, increases present-moment awareness, and provides an immediate tool for emotional self-regulation. Regular mindful breathing can improve concentration, reduce anxiety, and create a sense of inner peace.",
+      imagePath: "images/mindful_breathing.jpg",
+      category: "Mindfulness",
+      detailedTips: [
+        "Practice 4-7-8 breathing technique",
+        "Set aside 5-10 minutes daily",
+        "Use breathing as a stress management tool",
+        "Combine with meditation for deeper relaxation"
+      ]
+    ),
     MentalHealthTip(
-    title: "Daily Exercise",
-    description: "Engage in at least 30 minutes of physical activity to boost mood, reduce stress, and improve overall well-being.",
-    imagePath: "images/daily_exercise.jpeg",
-    category: "Physical Well-being",
-  ),
-
-
+      title: "Daily Exercise",
+      description: "Physical activity is a powerful mental health intervention. Regular exercise releases endorphins, the body's natural mood elevators, which combat depression and anxiety. Beyond physiological benefits, exercise provides a sense of achievement, improves self-esteem, and offers opportunities for social interaction. Whether it's a brisk walk, yoga, dancing, or strength training, finding an enjoyable physical activity can significantly enhance mental well-being and provide a healthy coping mechanism for stress.",
+      imagePath: "images/daily_exercise.jpeg",
+      category: "Physical Well-being",
+      detailedTips: [
+        "Choose activities you enjoy",
+        "Start with 30 minutes daily",
+        "Mix cardio and strength training",
+        "Set realistic and progressive goals"
+      ]
+    ),
     MentalHealthTip(
-    title: "Sleep Hygiene",
-    description: "Maintain a consistent sleep schedule and create a calming bedtime routine to enhance sleep quality and overall mental health.",
-    imagePath: "images/sleep_hygiene.jpeg",
-    category: "Self-Care",
-  ),
-
+      title: "Sleep Hygiene",
+      description: "Quality sleep is fundamental to mental health. Poor sleep can exacerbate anxiety, depression, and cognitive difficulties. Developing a consistent sleep routine helps regulate your body's internal clock, improve mood stability, and enhance cognitive function. A holistic approach to sleep hygiene involves creating a conducive sleep environment, managing screen time, practicing relaxation techniques, and maintaining a consistent sleep schedule. Prioritizing sleep is an essential form of self-care and mental health maintenance.",
+      imagePath: "images/sleep_hygiene.jpeg",
+      category: "Self-Care",
+      detailedTips: [
+        "Maintain consistent sleep and wake times",
+        "Create a calming bedtime ritual",
+        "Limit caffeine and screen time before bed",
+        "Keep bedroom cool and dark"
+      ]
+    ),
     MentalHealthTip(
-    title: "Connecting with Nature",
-    description: "Spend time outdoors, whether in a park or garden, to reduce stress and boost mental clarity.",
-    imagePath: "images/nature_walk.jpg",
-    category: "Well-being",
-  ),
-
+      title: "Connecting with Nature",
+      description: "Nature has inherent healing properties that can significantly improve mental health. Spending time outdoors reduces stress hormones, lowers blood pressure, and increases feelings of calm and happiness. Natural environments provide sensory stimulation that helps reset our overstimulated minds. Whether it's a forest walk, gardening, or simply sitting in a park, connecting with nature offers a powerful antidote to urban stress, promotes mindfulness, and enhances overall psychological well-being.",
+      imagePath: "images/nature_walk.jpg",
+      category: "Well-being",
+      detailedTips: [
+        "Take daily outdoor breaks",
+        "Practice walking meditation in nature",
+        "Engage in outdoor physical activities",
+        "Create a small indoor or balcony garden"
+      ]
+    ),
   ];
 
   final List<VideoInfo> _videos = [
@@ -79,69 +110,86 @@ class _MentalHealthResourceState extends State<MentalHealthResource> {
       category: "Beginners",
     ),
     VideoInfo(
-    title: "Guided Sleep Meditation",
-    videoId: "6p_yaNFSYao",
-    duration: "20 min",
-    category: "Relaxation",
-  ),
-
+      title: "Guided Sleep Meditation",
+      videoId: "6p_yaNFSYao",
+      duration: "20 min",
+      category: "Relaxation",
+    ),
     VideoInfo(
-    title: "Deep Breathing Exercises",
-    videoId: "nac4S2kXxA4",
-    duration: "10 min",
-    category: "Stress Relief",
-  ),
-
+      title: "Deep Breathing Exercises",
+      videoId: "nac4E2kXxA4",
+      duration: "10 min",
+      category: "Stress Relief",
+    ),
     VideoInfo(
-    title: "Positive Affirmations for Mental Clarity",
-    videoId: "aEzl6E92sHY",
-    duration: "12 min",
-    category: "Self-Growth",
-  ),
-
+      title: "Positive Affirmations for Mental Clarity",
+      videoId: "aEzl6E92sHY",
+      duration: "12 min",
+      category: "Self-Growth",
+    ),
   ];
 
-  YoutubePlayerController? _currentController;
-
-  void _playVideo(VideoInfo video) {
-    // Stop current video if playing
-    _currentController?.pause();
-    _currentController?.dispose();
-
-    // Create new controller
-    final newController = YoutubePlayerController(
-      initialVideoId: video.videoId,
-      flags: const YoutubePlayerFlags(
-        autoPlay: true,
-        mute: false,
-      ),
-    );
-
-    setState(() {
-      _currentController = newController;
-    });
-
-    // Show video player dialog
-    showDialog(
-      context: context,
-      builder: (context) => VideoPlayerDialog(
-        controller: newController,
-        video: video,
-      ),
-    ).then((_) {
-      // When dialog is closed
-      newController.pause();
-      newController.dispose();
-      setState(() {
-        _currentController = null;
-      });
-    });
+  void _launchYouTubeVideo(VideoInfo video) async {
+    final Uri url = Uri.parse('https://www.youtube.com/watch?v=${video.videoId}');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not launch ${video.title} video')),
+      );
+    }
   }
 
-  @override
-  void dispose() {
-    _currentController?.dispose();
-    super.dispose();
+  void _showTipDetailDialog(MentalHealthTip tip) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(tip.title),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                tip.imagePath,
+                width: 250,
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                tip.description,
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Actionable Tips:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              ...tip.detailedTips.map((actionTip) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('• '),
+                        Expanded(child: Text(actionTip)),
+                      ],
+                    ),
+                  )),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -168,7 +216,8 @@ class _MentalHealthResourceState extends State<MentalHealthResource> {
                 return ListTile(
                   title: Text(video.title),
                   subtitle: Text('${video.duration} - ${video.category}'),
-                  onTap: () => _playVideo(video),
+                  trailing: const Icon(Icons.play_circle_outline),
+                  onTap: () => _launchYouTubeVideo(video),
                 );
               },
             ),
@@ -198,39 +247,6 @@ class _MentalHealthResourceState extends State<MentalHealthResource> {
       ),
     );
   }
-
-  void _showTipDetailDialog(MentalHealthTip tip) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(tip.title),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                tip.imagePath,
-                width: 250,
-                height: 200,
-                fit: BoxFit.cover,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                tip.description,
-                style: const TextStyle(fontSize: 16),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class MentalHealthTip {
@@ -238,12 +254,14 @@ class MentalHealthTip {
   final String description;
   final String imagePath;
   final String category;
+  final List<String> detailedTips;
 
   MentalHealthTip({
     required this.title,
     required this.description,
     required this.imagePath,
     required this.category,
+    required this.detailedTips,
   });
 }
 
@@ -259,59 +277,4 @@ class VideoInfo {
     required this.duration,
     required this.category,
   });
-}
-
-class VideoPlayerDialog extends StatelessWidget {
-  final YoutubePlayerController controller;
-  final VideoInfo video;
-
-  const VideoPlayerDialog({
-    Key? key,
-    required this.controller,
-    required this.video,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(10),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          YoutubePlayer(
-            controller: controller,
-            showVideoProgressIndicator: true,
-            progressIndicatorColor: Colors.blue,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Text(
-                  video.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Duration: ${video.duration}'),
-                    Text('Category: ${video.category}'),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Close'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

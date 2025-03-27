@@ -32,6 +32,9 @@ dependencies:
   audio_session: ^0.1.25
   just_audio_web: ^0.4.14
   collection: ^1.17.0 
+  audioplayers: ^6.4.0
+  audioplayers_web: ^5.1.0
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
@@ -43,6 +46,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - .env
-  fonts:
-    - family: MaterialIcons
+    - assets/.env
+    - assets/rain.mp3
+    - assets/ocean.mp3
+    - assets/forest.mp3
+    - assets/fireplace.mp3
+    # - assets/rain.mp3
+    # - assets/ocean.mp3
+

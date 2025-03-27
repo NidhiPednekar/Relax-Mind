@@ -5,12 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
-import 'journal_screen.dart';
 import 'profile.dart';
 import 'mental_health_resource.dart';
 import 'happy_moments_screen.dart';
 import 'mood_check_screen.dart';
 import 'mindful_games.dart';
+import 'RelaxingSounds.dart'; // Relaxing Sounds import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -150,28 +150,8 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         }
        
-        // Load recent journal entries
-        final querySnapshot = await _firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('journal_entries')
-            .orderBy('createdAt', descending: true)
-            .limit(3)
-            .get();
-       
-        final entries = querySnapshot.docs.map((doc) {
-          final data = doc.data();
-          return {
-            'id': doc.id,
-            'title': data['title'] ?? 'Untitled',
-            'content': data['content'] ?? '',
-            'mood': data['mood'] ?? 'Neutral',
-            'createdAt': (data['createdAt'] as Timestamp).toDate(),
-          };
-        }).toList();
-       
+        // Load recent entries (if needed, you can modify this part)
         setState(() {
-          _recentEntries = entries;
           _isLoading = false;
         });
       }
@@ -444,14 +424,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
                           _buildQuickActionCard(
-                            'Journal',
-                            Icons.book,
-                            Colors.green,
+                            'Relaxing Sounds', // Changed from 'Journal'
+                            Icons.music_note, // Changed icon to music note
+                            Colors.teal, // Changed color
                             () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const JournalScreen(),
+                                  builder: (context) => const RelaxingSoundsPage(), // Updated navigation
                                 ),
                               );
                             },
@@ -490,120 +470,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                                                    builder: (context) => const MentalHealthResource(title: 'Mental Health Resources'),
+                                  builder: (context) => const MentalHealthResource(title: 'Mental Health Resources'),
                                 ),
                               );
                             },
                           ),
                         ],
                       ),
-                     
-                      const SizedBox(height: 30),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Recent Journal Entries',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const JournalScreen(),
-                                ),
-                              );
-                            },
-                            child: const Text('View All'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                     
-                      // Recent Journal Entries
-                      _recentEntries.isEmpty
-                          ? Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(15),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'No journal entries yet. Start writing!',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : Column(
-                              children: _recentEntries.map((entry) {
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 15),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(15),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 10,
-                                    ),
-                                    leading: Icon(
-                                      _getMoodIcon(entry['mood']),
-                                      color: _getMoodColor(entry['mood']),
-                                      size: 30,
-                                    ),
-                                    title: Text(
-                                      entry['title'],
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const SizedBox(height: 5),
-                                        Text(
-                                          entry['content'].length > 50
-                                              ? '${entry['content'].substring(0, 50)}...'
-                                              : entry['content'],
-                                        ),
-                                        const SizedBox(height: 5),
-                                        Text(
-                                          DateFormat('MMM d, yyyy').format(entry['createdAt']),
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    isThreeLine: true,
-                                  ),
-                                );
-                              }).toList(),
-                            ),
                     ],
                   ),
                 ),
@@ -661,4 +534,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

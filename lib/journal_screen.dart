@@ -19,7 +19,13 @@ class _JournalScreenState extends State<JournalScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   File? _selectedImage;
   String _currentMood = 'Happy';
-  final List<String> _moodOptions = ['Happy', 'Neutral', 'Sad', 'Anxious', 'Excited'];
+  final List<String> _moodOptions = [
+    'Happy',
+    'Neutral',
+    'Sad',
+    'Anxious',
+    'Excited'
+  ];
   bool _isUploading = false;
 
   @override
@@ -31,7 +37,7 @@ class _JournalScreenState extends State<JournalScreen> {
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    
+
     if (image != null) {
       setState(() {
         _selectedImage = File(image.path);
@@ -42,7 +48,7 @@ class _JournalScreenState extends State<JournalScreen> {
   Future<void> _takePhoto() async {
     final ImagePicker picker = ImagePicker();
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
-    
+
     if (photo != null) {
       setState(() {
         _selectedImage = File(photo.path);
@@ -51,78 +57,86 @@ class _JournalScreenState extends State<JournalScreen> {
   }
 
   Future<void> _saveJournalEntry() async {
-  if (_selectedImage == null || _descriptionController.text.trim().isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please add both an image and description')),
-    );
-    return;
-  }
-
-  setState(() {
-    _isUploading = true;
-  });
-
-  try {
-    // Get current user
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
+    if (_selectedImage == null || _descriptionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You must be logged in to add journal entries')),
+        const SnackBar(
+            content: Text('Please add both an image and description')),
       );
       return;
     }
 
-    // Upload image to Firebase Storage
-    final String fileName = '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final Reference storageRef = FirebaseStorage.instance.ref().child('journal_images/$fileName');
-    final UploadTask uploadTask = storageRef.putFile(_selectedImage!);
-    final TaskSnapshot taskSnapshot = await uploadTask;
-    final String imageUrl = await taskSnapshot.ref.getDownloadURL();
-
-    // Extract title from description (first few words)
-    String descriptionText = _descriptionController.text.trim();
-    String title = descriptionText.split(" ").take(5).join(" "); // First 5 words as title
-    String content = descriptionText;  // Full text as content
-
-    // Create journal entry
-    final entryId = const Uuid().v4();
-    final entry = JournalEntry(
-      id: entryId,
-      title: title,  // Add title
-      content: content,  // Add content
-      description: descriptionText,
-      imageUrl: imageUrl,
-      createdAt: DateTime.now(),
-      mood: _currentMood,
-    );
-
-    // Save to Firestore
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('journal_entries')
-        .doc(entryId)
-        .set(entry.toMap());
-
-    // Clear form
     setState(() {
-      _selectedImage = null;
-      _descriptionController.clear();
-      _isUploading = false;
+      _isUploading = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Journal entry saved successfully!')),
-    );
-  } catch (e) {
-    setState(() {
-      _isUploading = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error saving journal entry: ${e.toString()}')),
-    );
+    try {
+      // Get current user
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('You must be logged in to add journal entries')),
+        );
+        return;
+      }
+
+      // Upload image to Firebase Storage
+      final String fileName =
+          '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final Reference storageRef =
+          FirebaseStorage.instance.ref().child('journal_images/$fileName');
+      final UploadTask uploadTask = storageRef.putFile(_selectedImage!);
+      final TaskSnapshot taskSnapshot = await uploadTask;
+      final String imageUrl = await taskSnapshot.ref.getDownloadURL();
+
+      // Extract title from description (first few words)
+      String descriptionText = _descriptionController.text.trim();
+      String title = descriptionText
+          .split(" ")
+          .take(5)
+          .join(" "); // First 5 words as title
+      String content = descriptionText; // Full text as content
+
+      // Create journal entry
+      final entryId = const Uuid().v4();
+      final entry = JournalEntry(
+        id: entryId,
+        title: title, // Add title
+        content: content, // Add content
+        description: descriptionText,
+        imageUrl: imageUrl,
+        createdAt: DateTime.now(),
+        mood: _currentMood,
+      );
+
+      // Save to Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('journal_entries')
+          .doc(entryId)
+          .set(entry.toMap());
+
+      // Clear form
+      setState(() {
+        _selectedImage = null;
+        _descriptionController.clear();
+        _isUploading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Journal entry saved successfully!')),
+      );
+    } catch (e) {
+      setState(() {
+        _isUploading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving journal entry: ${e.toString()}')),
+      );
+    }
   }
-}
+
   void _checkMoodAndNavigate() {
     if (_currentMood == 'Sad' || _currentMood == 'Anxious') {
       Navigator.push(
@@ -205,7 +219,8 @@ class _JournalScreenState extends State<JournalScreen> {
                           value: _currentMood,
                           dropdownColor: Colors.black,
                           style: const TextStyle(color: Colors.white),
-                          icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                          icon: const Icon(Icons.arrow_drop_down,
+                              color: Colors.blue),
                           isExpanded: true,
                           onChanged: (String? newValue) {
                             setState(() {
@@ -213,7 +228,8 @@ class _JournalScreenState extends State<JournalScreen> {
                             });
                             _checkMoodAndNavigate();
                           },
-                          items: _moodOptions.map<DropdownMenuItem<String>>((String value) {
+                          items: _moodOptions
+                              .map<DropdownMenuItem<String>>((String value) {
                             IconData icon;
                             switch (value) {
                               case 'Happy':
@@ -275,7 +291,8 @@ class _JournalScreenState extends State<JournalScreen> {
                         children: [
                           TextButton.icon(
                             icon: const Icon(Icons.refresh, color: Colors.blue),
-                            label: const Text('Change Image', style: TextStyle(color: Colors.black87)),
+                            label: const Text('Change Image',
+                                style: TextStyle(color: Colors.black87)),
                             onPressed: _pickImage,
                           ),
                         ],
@@ -309,7 +326,8 @@ class _JournalScreenState extends State<JournalScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 ElevatedButton.icon(
-                                  icon: const Icon(Icons.photo_library, size: 18),
+                                  icon:
+                                      const Icon(Icons.photo_library, size: 18),
                                   label: const Text('Gallery'),
                                   onPressed: _pickImage,
                                   style: ElevatedButton.styleFrom(
@@ -347,7 +365,8 @@ class _JournalScreenState extends State<JournalScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
-                          borderSide: const BorderSide(color: Colors.blue, width: 2),
+                          borderSide:
+                              const BorderSide(color: Colors.blue, width: 2),
                         ),
                       ),
                     ),
