@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
@@ -10,7 +9,8 @@ import 'mental_health_resource.dart';
 import 'happy_moments_screen.dart';
 import 'mood_check_screen.dart';
 import 'mindful_games.dart';
-import 'RelaxingSounds.dart'; // Relaxing Sounds import
+import 'RelaxingSounds.dart';
+import 'support.dart'; // Import the EmergencySupport screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -150,7 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         }
        
-        // Load recent entries (if needed, you can modify this part)
         setState(() {
           _isLoading = false;
         });
@@ -160,36 +159,6 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  Color _getMoodColor(String mood) {
-    switch (mood.toLowerCase()) {
-      case 'happy':
-        return Colors.amber;
-      case 'sad':
-        return Colors.blue;
-      case 'anxious':
-        return Colors.purple;
-      case 'angry':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getMoodIcon(String mood) {
-    switch (mood.toLowerCase()) {
-      case 'happy':
-        return Icons.sentiment_very_satisfied;
-      case 'sad':
-        return Icons.sentiment_dissatisfied;
-      case 'anxious':
-        return Icons.sentiment_neutral;
-      case 'angry':
-        return Icons.sentiment_very_dissatisfied;
-      default:
-        return Icons.sentiment_neutral;
     }
   }
 
@@ -424,14 +393,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
                           _buildQuickActionCard(
-                            'Relaxing Sounds', // Changed from 'Journal'
-                            Icons.music_note, // Changed icon to music note
-                            Colors.teal, // Changed color
+                            'Relaxing Sounds',
+                            Icons.music_note,
+                            Colors.teal,
                             () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const RelaxingSoundsPage(), // Updated navigation
+                                  builder: (context) => const RelaxingSoundsPage(),
                                 ),
                               );
                             },
@@ -476,6 +445,71 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                           ),
                         ],
+                      ),
+
+                      const SizedBox(height: 30),
+                      // Emergency Support Section
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EmergencySupport(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade900,
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.emergency,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                              SizedBox(width: 15),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Emergency Support',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      'Immediate professional help and support',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),

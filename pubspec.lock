@@ -82,7 +82,7 @@ packages:
     source: hosted
     version: "7.1.0"
   audioplayers_web:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: audioplayers_web
       sha256: bd99d8821114747682a2be0adcdb70233d4697af989b549d3a20a0f49f6c9b13

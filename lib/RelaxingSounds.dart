@@ -13,7 +13,7 @@ class _RelaxingSoundsPageState extends State<RelaxingSoundsPage> {
   final AudioPlayer _rainPlayer = AudioPlayer();
   final AudioPlayer _oceanPlayer = AudioPlayer();
   final AudioPlayer _forestPlayer = AudioPlayer();
-  final AudioPlayer _fireplacePlayer = AudioPlayer();
+  final AudioPlayer _fireplacPlayer = AudioPlayer();
 
   // Volume controllers
   double _rainVolume = 0.5;
@@ -25,28 +25,28 @@ class _RelaxingSoundsPageState extends State<RelaxingSoundsPage> {
   final List<Map<String, dynamic>> _sounds = [
     {
       'name': 'Rain',
-      'asset': 'assets/rain.mp3',
+      'asset': 'rain.mp3',
       'icon': Icons.water_drop,
       'color': Colors.blue
     },
     {
       'name': 'Ocean',
-      'asset': 'assets/ocean.mp3',
+      'asset': 'ocean.mp3',
       'icon': Icons.waves,
       'color': Colors.teal
     },
     {
       'name': 'Forest',
-      'asset': 'assets/forest.mp3',
+      'asset': 'forest.mp3',
       'icon': Icons.forest,
       'color': Colors.green
     },
     {
       'name': 'Fireplace',
-      'asset': 'assets/fireplace.mp3',
+      'asset': 'fireplace.mp3',
       'icon': Icons.local_fire_department,
       'color': Colors.orange
-    }
+    },
   ];
 
   @override
@@ -55,7 +55,7 @@ class _RelaxingSoundsPageState extends State<RelaxingSoundsPage> {
     _rainPlayer.dispose();
     _oceanPlayer.dispose();
     _forestPlayer.dispose();
-    _fireplacePlayer.dispose();
+    _fireplacPlayer.dispose();
     super.dispose();
   }
 
@@ -121,8 +121,8 @@ class _RelaxingSoundsPageState extends State<RelaxingSoundsPage> {
               const Spacer(),
               IconButton(
                 icon: Icon(
-                  player.state == PlayerState.playing
-                    ? Icons.pause_circle
+                  player.state == PlayerState.playing 
+                    ? Icons.pause_circle 
                     : Icons.play_circle,
                   color: sound['color'],
                   size: 40,
@@ -171,50 +171,51 @@ class _RelaxingSoundsPageState extends State<RelaxingSoundsPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-               
+                
                 // Rain Sound
                 _buildSoundControl(
-                  _sounds[0],
-                  _rainPlayer,
-                  _rainVolume,
+                  _sounds[0], 
+                  _rainPlayer, 
+                  _rainVolume, 
                   (value) async {
                     setState(() => _rainVolume = value);
                     await _rainPlayer.setVolume(value);
                   }
                 ),
-               
+                
                 // Ocean Sound
                 _buildSoundControl(
-                  _sounds[1],
-                  _oceanPlayer,
-                  _oceanVolume,
+                  _sounds[1], 
+                  _oceanPlayer, 
+                  _oceanVolume, 
                   (value) async {
                     setState(() => _oceanVolume = value);
                     await _oceanPlayer.setVolume(value);
                   }
                 ),
-               
+                
                 // Forest Sound
                 _buildSoundControl(
-                  _sounds[2],
-                  _forestPlayer,
-                  _forestVolume,
+                  _sounds[2], 
+                  _forestPlayer, 
+                  _forestVolume, 
                   (value) async {
                     setState(() => _forestVolume = value);
                     await _forestPlayer.setVolume(value);
                   }
                 ),
-               
+                
                 // Fireplace Sound
                 _buildSoundControl(
-                  _sounds[3],
-                  _fireplacePlayer,
-                  _fireplaceVolume,
+                  _sounds[3], 
+                  _fireplacPlayer, 
+                  _fireplaceVolume, 
                   (value) async {
                     setState(() => _fireplaceVolume = value);
-                    await _fireplacePlayer.setVolume(value);
+                    await _fireplacPlayer.setVolume(value);
                   }
                 ),
+                
               ],
             ),
           ),

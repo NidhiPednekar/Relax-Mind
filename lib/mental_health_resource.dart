@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+
 class MentalHealthResource extends StatefulWidget {
   final String title;
 
@@ -52,6 +53,32 @@ class _MentalHealthResourceState extends State<MentalHealthResource> {
         "Combine with meditation for deeper relaxation"
       ]
     ),
+    MentalHealthTip(
+  title: "Progressive Muscle Relaxation",
+  description: "Progressive Muscle Relaxation (PMR) is a technique that helps reduce stress and anxiety by systematically tensing and relaxing different muscle groups. This method promotes physical relaxation, improves sleep quality, and enhances overall mental well-being. Practicing PMR regularly can help you become more aware of physical tension and effectively release it.",
+  imagePath: "images/pmr.jpg",
+  category: "Stress Relief",
+  detailedTips: [
+    "Start from your toes and work upward",
+    "Tense each muscle group for 5-10 seconds, then relax",
+    "Breathe deeply while practicing",
+    "Practice daily for best results"
+  ]
+),
+
+MentalHealthTip(
+  title: "Setting Healthy Boundaries",
+  description: "Establishing personal boundaries is essential for mental well-being. Healthy boundaries protect your energy, prevent burnout, and improve relationships by fostering mutual respect. Learning to say no, prioritizing self-care, and communicating limits clearly can help maintain emotional balance and reduce stress.",
+  imagePath: "images/boundaries.png",
+  category: "Emotional Well-being",
+  detailedTips: [
+    "Recognize your personal limits",
+    "Communicate boundaries assertively",
+    "Learn to say no without guilt",
+    "Prioritize self-care without overcommitting"
+  ]
+),
+
     MentalHealthTip(
       title: "Daily Exercise",
       description: "Physical activity is a powerful mental health intervention. Regular exercise releases endorphins, the body's natural mood elevators, which combat depression and anxiety. Beyond physiological benefits, exercise provides a sense of achievement, improves self-esteem, and offers opportunities for social interaction. Whether it's a brisk walk, yoga, dancing, or strength training, finding an enjoyable physical activity can significantly enhance mental well-being and provide a healthy coping mechanism for stress.",
@@ -117,19 +144,44 @@ class _MentalHealthResourceState extends State<MentalHealthResource> {
     ),
     VideoInfo(
       title: "Deep Breathing Exercises",
-      videoId: "nac4E2kXxA4",
+      videoId: "F28MGLlpP90",
       duration: "10 min",
       category: "Stress Relief",
     ),
     VideoInfo(
       title: "Positive Affirmations for Mental Clarity",
-      videoId: "aEzl6E92sHY",
+      videoId: "kGgcgEPeiYE",
       duration: "12 min",
       category: "Self-Growth",
     ),
+    VideoInfo(
+  title: "Stress Relief Yoga Flow",
+  videoId: "7CTsdbf81W8",
+  duration: "25 min",
+  category: "Relaxation",
+),
+VideoInfo(
+  title: "Body Scan Meditation",
+  videoId: "uqtIqCKjkuc",
+  duration: "20 min", 
+  category: "Mindfulness",
+),
+VideoInfo(
+  title: "Anxiety Reduction Techniques",
+  videoId: "xGb4fvfZpWM",
+  duration: "18 min",
+  category: "Mental Health",
+),
+VideoInfo(
+  title: "Evening Wind Down Meditation",
+  videoId: "_3fvhTO3pLM",
+  duration: "15 min",
+  category: "Sleep Preparation",
+),
+    
   ];
 
-  void _launchYouTubeVideo(VideoInfo video) async {
+Future<void> _launchYouTubeVideo(VideoInfo video) async {
     final Uri url = Uri.parse('https://www.youtube.com/watch?v=${video.videoId}');
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);

@@ -7,8 +7,19 @@ class MindfulnessGamesScreen extends StatelessWidget {
   const MindfulnessGamesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
+      title: const Text('Mindfulness Games'),
+      backgroundColor: Colors.blue,
+    ),
+    body: Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.blue.shade300, Colors.white],
@@ -20,6 +31,7 @@ class MindfulnessGamesScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
+
           children: [
             const Icon(
               Icons.games,
@@ -96,15 +108,29 @@ class MindfulnessGamesScreen extends StatelessWidget {
                       );
                     },
                   ),
+                  _buildGameCard(
+                    context,
+                    'Word Guess',
+                    Icons.color_lens,
+                    Colors.deepPurple,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const WordGuessGameScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
+    ),
+  );
+}
   Widget _buildGameCard(
     BuildContext context,
     String title,
@@ -764,5 +790,470 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
         ),
       ),
     );
+  }
+}
+
+class WordGuessGameScreen extends StatefulWidget {
+  const WordGuessGameScreen({Key? key}) : super(key: key);
+
+  @override
+  _WordGuessGameScreenState createState() => _WordGuessGameScreenState();
+}
+
+class _WordGuessGameScreenState extends State<WordGuessGameScreen> {
+  final List<Map<String, dynamic>> _wordList = [
+    {
+      'word': 'FLUTTER',
+      'hint': 'Popular mobile development framework',
+      'revealedLetters': [0, 5] // Reveal first and last letters
+    },
+    {
+      'word': 'CODING',
+      'hint': 'Programming activity',
+      'revealedLetters': [0, 4]
+    },
+    {
+      'word': 'MOBILE',
+      'hint': 'Portable electronic device',
+      'revealedLetters': [1, 5]
+    },
+    {
+      'word': 'DART',
+      'hint': 'Programming language by Google',
+      'revealedLetters': [0, 3]
+    },
+    {
+      'word': 'ANDROID',
+      'hint': 'Mobile operating system',
+      'revealedLetters': [0, 6]
+    },
+    {
+      'word': 'DEVELOPER',
+      'hint': 'Software creation professional',
+      'revealedLetters': [0, 8]
+    },
+    {
+      'word': 'MINDFUL',
+      'hint': 'Being aware and present',
+      'revealedLetters': [0, 6]
+    },
+    {
+      'word': 'RELAX',
+      'hint': 'To become less tense',
+      'revealedLetters': [0, 4]
+    },
+    {
+      'word': 'BREATHE',
+      'hint': 'Take air into lungs',
+      'revealedLetters': [0, 6]
+    },
+    {
+      'word': 'PEACE',
+      'hint': 'State of tranquility',
+      'revealedLetters': [0, 4]
+    }
+  ];
+
+  late String _currentWord;
+  late List<String> _displayWord;
+  late String _hint;
+  late List<int> _revealedLetters;
+  int _attempts = 6;
+  int _score = 0;
+  final TextEditingController _guessController = TextEditingController();
+  final Set<String> _guessedLetters = {};
+  bool _gameOver = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startNewGame();
+  }
+
+  void _startNewGame() {
+    // Select a random word from the list
+    final selectedWord = _wordList[Random().nextInt(_wordList.length)];
+   
+    setState(() {
+      _currentWord = selectedWord['word'];
+      _hint = selectedWord['hint'];
+      _revealedLetters = List<int>.from(selectedWord['revealedLetters']);
+      _guessedLetters.clear();
+      _gameOver = false;
+     
+      // Initialize display word with underscores
+      _displayWord = List.filled(_currentWord.length, '_');
+     
+      // Reveal specified letters
+      for (int index in _revealedLetters) {
+        _displayWord[index] = _currentWord[index];
+        _guessedLetters.add(_currentWord[index]);
+      }
+     
+      _attempts = 6;
+    });
+  }
+
+  void _checkGuess() {
+    if (_gameOver) return;
+    
+    String guess = _guessController.text.trim().toUpperCase();
+    _guessController.clear();
+    
+    if (guess.isEmpty) return;
+    
+    if (guess.length == 1) {
+      // Single letter guess
+      _checkLetterGuess(guess);
+    } else if (guess.length == _currentWord.length) {
+      // Full word guess
+      _checkWordGuess(guess);
+    } else {
+      // Invalid guess length
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a single letter or the full ${_currentWord.length}-letter word'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+  
+  void _checkLetterGuess(String letter) {
+    if (_guessedLetters.contains(letter)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('You already guessed the letter "$letter"'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    
+    setState(() {
+      _guessedLetters.add(letter);
+      
+      if (_currentWord.contains(letter)) {
+        // Correct letter guess
+        for (int i = 0; i < _currentWord.length; i++) {
+          if (_currentWord[i] == letter) {
+            _displayWord[i] = letter;
+          }
+        }
+        
+        // Check if word is complete
+        if (!_displayWord.contains('_')) {
+          _gameOver = true;
+          _score++;
+          _showSuccessDialog();
+        }
+      } else {
+        // Incorrect letter guess
+        _attempts--;
+        if (_attempts <= 0) {
+          _gameOver = true;
+          _showGameOverDialog();
+        }
+      }
+    });
+  }
+  
+  void _checkWordGuess(String word) {
+    setState(() {
+      if (word == _currentWord) {
+        // Correct word guess
+        _displayWord = _currentWord.split('');
+        _gameOver = true;
+        _score++;
+        _showSuccessDialog();
+      } else {
+        // Incorrect word guess
+        _attempts -= 2; // Penalize more for incorrect word guess
+        if (_attempts <= 0) {
+          _gameOver = true;
+          _showGameOverDialog();
+        }
+      }
+    });
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Congratulations!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('You guessed the word: $_currentWord'),
+              const SizedBox(height: 10),
+              Text('Your score: $_score'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Next Word'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _startNewGame();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showGameOverDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Game Over'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('The word was: $_currentWord'),
+              const SizedBox(height: 10),
+              Text('Final score: $_score'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Play Again'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _score = 0;
+                  _startNewGame();
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showHintDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Hint'),
+          content: Text(_hint),
+          actions: [
+            TextButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildKeyboard() {
+    const letters = [
+      ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+      ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+      ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
+    ];
+    
+    return Column(
+      children: letters.map((row) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: row.map((letter) {
+              bool isGuessed = _guessedLetters.contains(letter);
+              bool isCorrect = _currentWord.contains(letter) && isGuessed;
+              
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: ElevatedButton(
+                  onPressed: isGuessed || _gameOver 
+                      ? null 
+                      : () {
+                          _guessController.text = letter;
+                          _checkLetterGuess(letter);
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isCorrect ? Colors.green : Colors.blue,
+                    disabledBackgroundColor: isCorrect ? Colors.green.shade300 : Colors.grey,
+                    minimumSize: const Size(36, 36),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: Text(
+                    letter,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Word Guess Game'),
+        backgroundColor: Colors.deepPurple,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline),
+            onPressed: _showHintDialog,
+          )
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade100, Colors.white],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              // Score and attempts
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Score: $_score',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Attempts: $_attempts',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: _attempts <= 2 ? Colors.red : Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 30),
+              
+              // Word display
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(_currentWord.length, (index) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 5),
+                      width: 30,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Colors.deepPurple.shade300,
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _displayWord[index] == '_' ? '' : _displayWord[index],
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Input field for guessing
+              TextField(
+                controller: _guessController,
+                decoration: InputDecoration(
+                  hintText: 'Enter a letter or the whole word',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: _checkGuess,
+                  ),
+                ),
+                textAlign: TextAlign.center,
+                textCapitalization: TextCapitalization.characters,
+                maxLength: _currentWord.length,
+                enabled: !_gameOver,
+                onSubmitted: (_) => _checkGuess(),
+              ),
+              
+              const SizedBox(height: 10),
+              
+              // On-screen keyboard
+              Expanded(
+                child: Center(
+                  child: _buildKeyboard(),
+                ),
+              ),
+              
+              // New game button
+              if (_gameOver)
+                ElevatedButton(
+                  onPressed: _startNewGame,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 30,
+                      vertical: 15,
+                    ),
+                  ),
+                  child: const Text('New Game'),
+                ),
+                
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _guessController.dispose();
+    super.dispose();
   }
 }
