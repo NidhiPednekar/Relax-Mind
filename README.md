@@ -1,16 +1,86 @@
-# relax_mind
+![i2](https://github.com/user-attachments/assets/1b05888d-7047-4597-a9b4-31b2de1a0c67)![WhatsApp Image 2025-04-27 at 12 48 07_bc3fd2c4](https://github.com/user-attachments/assets/bb61683c-bb04-4f33-b863-a8078f0e318d)# RelaxMind
 
-A new Flutter project.
+RelaxMind is a mobile application built using **Flutter** and **Firebase**, designed to help users reduce stress, enhance mindfulness, and promote mental well-being through guided meditations, calming sounds, and wellness tracking.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+### Features
 
-A few resources to get you started if this is your first Flutter project:
+- 🧘‍♂️ Guided Meditation Sessions
+- 🎵 Relaxing Music and Ambient Sounds
+- 📈 Mood Tracking
+- 🔔 Daily Mindfulness Reminders
+- ☁️ Cloud Data Storage with Firebase
+- 🔒 Secure Authentication (Email/Google Sign-In)
+- 📱 Smooth and Responsive UI
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 🚀 Technologies Used
+
+- Flutter
+- Firebase Authentication
+- Firebase Firestore
+- Provider / Riverpod (State Management)
+
+---
+
+### 🛠️ Setup and Installation
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/your-username/relaxmind.git
+   cd relaxmind
+2.**Install Dependencies**
+
+    flutter pub get
+
+3.**Set Up Firebase**
+
+  -Create a Firebase project at Firebase Console.
+  -Add your Android and iOS apps to Firebase.
+  -Download google-services.json for Android and GoogleService-Info.plist for iOS.
+  -Place them in:
+    
+    android/app/
+    ios/Runner/
+  4.**Run the App**
+      flutter run
+
+📸 Screenshots
+![i1](https://github.com/user-attachments/assets/7410248d-d3a4-4270-bcf2-2d98db647c35)
+![i2](https://github.com/user-attachments/assets/b750c221-6868-4658-bb6e-be40bf1ea5ae)
+
+![i3](https://github.com/user-attachments/assets/92c8c9d0-5ab7-4ae5-a258-a5d5874d4b35)
+![i4](https://github.com/user-attachments/assets/eec14ea8-b43e-43e4-b495-1807c29c3528)
+
+![i5](https://github.com/user-attachments/assets/64765200-a6b3-47ff-878c-e4e5e5ecf9fb)
+![i6](https://github.com/user-attachments/assets/10489fd1-b3cb-417e-b1e2-0583b153abd3)
+
+![i7](https://github.com/user-attachments/assets/3ec6d6e2-42b5-4f12-a0b1-f7efdbec6c2a)
+![i8](https://github.com/user-attachments/assets/3723bd26-3727-429e-9e75-d39e970021ca)
+
+![i9](https://github.com/user-attachments/assets/c022716c-1452-4cf6-b917-f621abc629ce)
+![i10](https://github.com/user-attachments/assets/8e74be30-9ef7-4c45-8198-d4adeafa10bc)
+
+### 📋 Future Improvements
+🎯 AI-based Mood Predictions
+🌐 Multi-language Support
+🛎️ Smart Notification System
+👥 Community / Forum Features
+
+### 🤝 Contributing
+Contributions are welcome!
+Please follow these steps:
+
+Fork the project
+
+Create your feature branch (git checkout -b feature/AmazingFeature)
+
+Commit your changes (git commit -m 'Add some AmazingFeature')
+
+Push to the branch (git push origin feature/AmazingFeature)
+
+Open a Pull Request
+
+
