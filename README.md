@@ -1,4 +1,4 @@
-![i2](https://github.com/user-attachments/assets/1b05888d-7047-4597-a9b4-31b2de1a0c67)![WhatsApp Image 2025-04-27 at 12 48 07_bc3fd2c4](https://github.com/user-attachments/assets/bb61683c-bb04-4f33-b863-a8078f0e318d)# RelaxMind
+# RelaxMind
 
 RelaxMind is a mobile application built using **Flutter** and **Firebase**, designed to help users reduce stress, enhance mindfulness, and promote mental well-being through guided meditations, calming sounds, and wellness tracking.
 
